@@ -18,11 +18,66 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>Google Maps Platform WebGL Codelab</title> 
-    <link rel="stylesheet" type="text/css" href="./styles.css" />   
-    <script src="./app.js" defer></script>    
+    <title>Google Maps Platform WebGL Codelab</title>
+    <link rel="stylesheet" type="text/css" href="./styles.css" />
+    <link rel="stylesheet" type="text/css" href="./tabs.css" />
+    <script src="tabs.js"></script>
+    <script src="./app.js" defer></script>
+    <script>
+      // Get the element with id="defaultOpen" and click on it
+      document.getElementById("path").click();
+    </script>
   </head>
-  <body>
-    <div id="map"></div>    
+  <body style="background-color: rgb(39 39 42); font-family: NeueMachina, sans-serif;">
+    <header style="border-bottom: 5px solid; border-color: rgb(139 92 246)">
+      <h1
+        style="
+          font-family: NeueMachina, sans-serif;
+          margin-top: 0px;
+          padding-top: 20px;
+          font-weight: 800;
+        "
+        class="text-gray"
+      >
+        <span> < </span>
+        <span> HackNU/ </span>
+        <span class="text-violet"> 2022 </span>
+        >
+      </h1>
+    </header>
+    <div style="float: left; width: 300px" class="custom-list">
+      <!-- Tab links -->
+      <div class="tab">
+        <button class="tablinks" onclick="openCity(event, 'Path')" id="path">
+          Path
+        </button>
+
+        <button class="tablinks" onclick="openCity(event, 'History')">
+          History
+        </button>
+      </div>
+
+      <!-- Tab content -->
+      <div id="Path" class="tabcontent">
+        <h3>London</h3>
+        <p>London is the capital city of England.</p>
+      </div>
+
+      <div id="History" class="tabcontent">
+        <input type="text" placeholder="From" class="custom-input">
+        <p>-</p>
+        <input type="text" placeholder="To">
+        <hr>
+        <h3>Paris</h3>
+        <p>Paris is the capital of France.</p>
+        <hr>
+        <h3>London</h3>
+        <p>London is the capital city of England.</p>
+        <hr>
+        <h3>Tokyo</h3>
+        <p>Tokyo is the capital of Japan.</p>
+      </div>
+    </div>
+    <div id="map"></div>
   </body>
 </html>

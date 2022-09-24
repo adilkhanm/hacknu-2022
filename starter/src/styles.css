@@ -5,3 +5,35 @@ body,
     margin: 0;
     padding: 0;
 }
+@font-face  {
+    font-family: NeueMachina;
+    src: url(/fonts/font/NeueMachina-bold.woff);
+  }
+
+.custom-list{
+    height: 100%;
+    border-right: 5px solid;
+    border-color: rgb(139 92 246);
+    background-color:azure;
+
+}
+.text-violet{
+    --tw-text-opacity: 1;
+    color: rgb(139 92 246/var(--tw-text-opacity));
+}
+.text-gray{
+    --tw-text-opacity: 1;
+    color: rgb(243 244 246/var(--tw-text-opacity));
+}
+.custom-input{
+}
+input[type=text]:focus {
+    border: 3px solid rgb(139 92 246);
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border-color: rgb(139 92 246);
+  }
