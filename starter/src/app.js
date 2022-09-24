@@ -94,13 +94,21 @@ function loadPersonalMark(scene) {
   );
 }
 
+function getSphere(radius) {
+  const geometry = new THREE.SphereBufferGeometry(radius, 15, 15);
+  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff} );
+  const sphere = new THREE.Mesh( geometry, material );
+  sphere.name = "sphere";
+  return sphere;
+}
+
 function getCylinder(horizontalAccuracy, verticalAccuracy) {
   const radiusTop = horizontalAccuracy;
   const radiusBottom = horizontalAccuracy;
   const height = verticalAccuracy * 2;
   const radialSegments = horizontalAccuracy * 2;
   const geometry = new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height, radialSegments);
-  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.5} );
+  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.2} );
   material.transparent = true;
   const cylinder = new THREE.Mesh( geometry, material );
   cylinder.rotation.x = 90 * Math.PI / 180;
@@ -117,14 +125,16 @@ function initWebGLOverlayView (map) {
     camera = new THREE.PerspectiveCamera();
     const ambientLight = new THREE.AmbientLight( 0xffffff, 0.75 ); // soft white light
     scene.add( ambientLight );
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.25);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.55);
     directionalLight.position.set(0, 0, 1);
     scene.add(directionalLight);
 
-    loadPersonalMark(scene);
+    // loadPersonalMark(scene);
+    scene.add(getSphere(1.5));
     scene.add(getCylinder(location_data.horAccuracy, location_data.verAccuracy));
 
     map.setCenter(getLatLngAltitudeLiteral());
+
   };
 
   webGLOverlayView.onContextRestored = ({gl}) => {
@@ -141,7 +151,14 @@ function initWebGLOverlayView (map) {
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
     // console.log(scene.children[2].name);
 
-    scene.children[2] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
+    // scaleValue = 100;
+
+    // console.log(scene.children[2].name);
+    scene.children[3] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
+    const scaleValue = Math.pow(2, mapOptions.zoom - Math.min(19, map.getZoom()));
+    // console.log(scaleValue);
+    scene.children[2].scale.set(scaleValue, scaleValue, 1);
+    scene.children[3].scale.set(scaleValue, 1, scaleValue);
 
     webGLOverlayView.requestRedraw();
     renderer.render(scene, camera);
