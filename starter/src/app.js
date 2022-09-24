@@ -66,7 +66,6 @@ pubnub.addListener({
   message: function(receiveMessage) {
     location_data = receiveMessage.message;
     if (!webGLOverlayViewInitialized) {
-      webGLOverlayViewInitialized = true;
       initWebGLOverlayView(map);
     }
   }
@@ -108,7 +107,7 @@ function getCylinder(horizontalAccuracy, verticalAccuracy) {
   const height = verticalAccuracy * 2;
   const radialSegments = horizontalAccuracy * 2;
   const geometry = new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height, radialSegments);
-  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.2} );
+  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.3} );
   material.transparent = true;
   const cylinder = new THREE.Mesh( geometry, material );
   cylinder.rotation.x = 90 * Math.PI / 180;
@@ -117,15 +116,19 @@ function getCylinder(horizontalAccuracy, verticalAccuracy) {
 }
 
 function initWebGLOverlayView (map) {
+  // setup
+  webGLOverlayViewInitialized = true;
+  let locationHistory = [];
+
   let scene, renderer, camera;
   // WebGLOverlayView code goes here
   const webGLOverlayView = new google.maps.WebGLOverlayView();
   webGLOverlayView.onAdd = () => {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera();
-    const ambientLight = new THREE.AmbientLight( 0xffffff, 0.75 ); // soft white light
+    const ambientLight = new THREE.AmbientLight( 0xffffff, 0.50 ); // soft white light
     scene.add( ambientLight );
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.75);
     directionalLight.position.set(0, 0, 1);
     scene.add(directionalLight);
 
@@ -149,16 +152,65 @@ function initWebGLOverlayView (map) {
   webGLOverlayView.onDraw = ({gl, transformer}) => {
     const matrix = transformer.fromLatLngAltitude(getLatLngAltitudeLiteral());
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
-    // console.log(scene.children[2].name);
 
-    // scaleValue = 100;
-
-    // console.log(scene.children[2].name);
     scene.children[3] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
     const scaleValue = Math.pow(2, mapOptions.zoom - Math.min(19, map.getZoom()));
-    // console.log(scaleValue);
     scene.children[2].scale.set(scaleValue, scaleValue, 1);
     scene.children[3].scale.set(scaleValue, 1, scaleValue);
+
+    let lastLocation = locationHistory[locationHistory.length - 1];
+    if (!locationHistory.length || lastLocation.latitude !== location_data.latitude
+        || lastLocation.longitude !== location_data.longitude
+        || lastLocation.altitude !== location_data.altitude
+        || lastLocation.activity !== location_data.activity) {
+      locationHistory.push(location_data);
+      let lineCoords = [];
+      for (const data of locationHistory) {
+        lineCoords.push(new THREE.Vector3(
+            (data.longitude - location_data.longitude) * 40075000.0 * Math.cos(data.longitude) / 360.0,
+            (data.latitude - location_data.latitude) * 111320.0,
+            (data.altitude - location_data.altitude)));
+      }
+
+      let tubeGeometry = new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(lineCoords),
+          512,
+          0.5,
+          8,
+          false
+      )
+      let line = new THREE.Line(tubeGeometry, new THREE.LineBasicMaterial({color: 0x0000ff}));
+      line.name = "location_path";
+      if (scene.getObjectByName(line.name)) {
+        scene.children[4] = line;
+      } else {
+        scene.add(line);
+      }
+
+      if (lastLocation) {
+        let marker = new google.maps.Marker({
+          position: {
+            lat: lastLocation.latitude,
+            lng: lastLocation.longitude
+          },
+          map,
+          title: "marker" + (locationHistory.length - 2).toString()
+        });
+        const contentString =
+            '<h3>Activity: ' + lastLocation.activity + '</h3>' +
+            '<h3>Floor: ' + lastLocation.floorLabel + ' </h3>';
+        const infoWindow = new google.maps.InfoWindow({
+          content: contentString,
+        });
+        marker.addListener("click", () => {
+          infoWindow.open({
+            anchor: marker,
+            map,
+            shouldFocus: false,
+          });
+        });
+      }
+    }
 
     webGLOverlayView.requestRedraw();
     renderer.render(scene, camera);
@@ -167,8 +219,6 @@ function initWebGLOverlayView (map) {
 
   webGLOverlayView.setMap(map)
 }
-
-
 
 (async () => {        
   map = await initMap();
