@@ -17,6 +17,14 @@ import { Loader } from '@googlemaps/js-api-loader';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+let map;
+
+const Pubnub = require('pubnub');
+const pubnub = new Pubnub({
+  subscribeKey: "sub-c-bd5e7bdb-4007-4ebd-b9c8-1f344613d945",
+  userId: "client",
+});
+
 const apiOptions = {
   "apiKey": "AIzaSyDOgJ-0ARoatmn6vcen5vCuDimcqS114Lk",
   "version": "beta"
@@ -25,20 +33,83 @@ const apiOptions = {
 const mapOptions = {
   "tilt": 60,
   "heading": 90,
-  "zoom": 19,
-  "center": { lat: 51.53327931, lng: -0.126299062 },
+  "zoom": 17,
+  "center": { lat: 0, lng: 0 },
+  // "center": { lat: 35.66093428, lng: 139.7290334 },
   "mapId": "4c34c37db05ddaac"
 }
+
+let location_data = {
+  "latitude": 35.66093428,
+  "longitude": 139.7290334,
+  "altitude": 0,
+  "identifier": null,
+  "timestamp": 4875,
+  "floorLabel": null,
+  "horAccuracy": 2.314,
+  "verAccuracy": 0.612,
+  "activity": "unknown"
+}
+
+function getLatLngAltitudeLiteral() {
+  return {
+    lat: location_data.latitude,
+    lng: location_data.longitude,
+    altitude: location_data.altitude
+  }
+}
+
+let webGLOverlayViewInitialized = false;
+
+const pnChannel = "location_channel";
+pubnub.subscribe({channels: [pnChannel]});
+pubnub.addListener({
+  message: function(receiveMessage) {
+    location_data = receiveMessage.message;
+    console.log(location_data);
+    if (!webGLOverlayViewInitialized) {
+      console.log("init..");
+      webGLOverlayViewInitialized = true;
+      initWebGLOverlayView(map);
+    }
+  }
+});
 
 async function initMap() {    
   const mapDiv = document.getElementById("map");
   const apiLoader = new Loader(apiOptions);
-  await apiLoader.load()      
+  await apiLoader.load()
   return new google.maps.Map(mapDiv, mapOptions);
 }
 
+function loadPersonalMark(scene) {
+  let loader = new GLTFLoader();
+  const source = 'pin.gltf';
+  loader.load(
+      source,
+      gltf => {
+        gltf.scene.rotation.x = 180 * Math.PI/180;
+        gltf.scene.rotation.z = 90 * Math.PI/180;
+        scene.add(gltf.scene);
+      }
+  );
+}
+
+function getCylinder(horizontalAccuracy, verticalAccuracy) {
+  const radiusTop = horizontalAccuracy;
+  const radiusBottom = horizontalAccuracy;
+  const height = verticalAccuracy * 2;
+  const radialSegments = horizontalAccuracy * 2;
+  const geometry = new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height, radialSegments);
+  const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.5} );
+  material.transparent = true;
+  const cylinder = new THREE.Mesh( geometry, material );
+  cylinder.rotation.x = 90 * Math.PI / 180;
+  return cylinder;
+}
+
 function initWebGLOverlayView (map) {
-  let scene, renderer, camera, loader;
+  let scene, renderer, camera;
   // WebGLOverlayView code goes here
   const webGLOverlayView = new google.maps.WebGLOverlayView();
   webGLOverlayView.onAdd = () => {
@@ -47,53 +118,15 @@ function initWebGLOverlayView (map) {
     const ambientLight = new THREE.AmbientLight( 0xffffff, 0.75 ); // soft white light
     scene.add( ambientLight );
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.25);
-    directionalLight.position.set(1, -1, 1);
+    directionalLight.position.set(0, 0, 1);
     scene.add(directionalLight);
 
-    loader = new GLTFLoader();
-    const source = 'pin.gltf';
-    loader.load(
-        source,
-        gltf => {
-          gltf.scene.scale.set(3,3,3);
-          gltf.scene.rotation.x = 180 * Math.PI/180;
-          gltf.scene.rotation.z = 90 * Math.PI/180;
-          // gltf.scene.position.setX(5);
-          // gltf.scene.position.setY(5);
-          scene.add(gltf.scene);
-        }
-    );
+    loadPersonalMark(scene);
+    scene.add(getCylinder(location_data.horAccuracy, location_data.verAccuracy));
 
-    const radiusTop = 20;
-    const radiusBottom = 20;
-    const height = 5;
-    const radialSegments = 20;
-    const geometry = new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height, radialSegments);
-    const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.5} );
-    material.transparent = true;
-    const cylinder = new THREE.Mesh( geometry, material );
-    cylinder.rotation.x = 90 * Math.PI / 180;
-    scene.add(cylinder);
-
-    // const source2 = 'sphere/scene.gltf';
-    // loader.load(
-    //     source2,
-    //     gltf => {
-    //       gltf.scene.scale.set(10,10,10);
-    //       gltf.scene.rotation.x = 90 * Math.PI/ 180;
-    //       console.log(gltf.scene);
-    //       // let mesh = gltf.scene.children[0];
-    //       // mesh.material.transparent = true;
-    //       // mesh.material.opacity = 0.5;
-    //       // gltf.scene.material.opacity = 0;
-    //       // gltf.scene.material.transparent = true;
-    //       // gltf.scene.color = 0x002200;
-    //       // gltf.scene.rotation.y = 90 * Math.PI / 180;
-    //       // gltf.scene.rotation.z = 180 * Math.PI / 180;
-    //       scene.add(gltf.scene);
-    //     }
-    // );
+    map.setCenter(getLatLngAltitudeLiteral());
   };
+
   webGLOverlayView.onContextRestored = ({gl}) => {
     renderer = new THREE.WebGLRenderer({
       canvas: gl.canvas,
@@ -101,33 +134,10 @@ function initWebGLOverlayView (map) {
       ...gl.getContextAttributes(),
     });
     renderer.autoClear = false;
-
-    loader.manager.onLoad = () => {
-      renderer.setAnimationLoop(() => {
-        map.moveCamera({
-          "tilt": mapOptions.tilt,
-          "heading": mapOptions.heading,
-          "zoom": mapOptions.zoom
-        });
-
-        if (mapOptions.tilt < 67.5) {
-          mapOptions.tilt += 0.5
-        } else if (mapOptions.heading <= 150) {
-          mapOptions.heading += 0.2;
-        } else {
-          renderer.setAnimationLoop(null)
-        }
-      });
-    }
   };
-  webGLOverlayView.onDraw = ({gl, transformer}) => {
-    const latLngAltitudeLiteral = {
-      lat: mapOptions.center.lat,
-      lng: mapOptions.center.lng,
-      altitude: 15
-    }
 
-    const matrix = transformer.fromLatLngAltitude(latLngAltitudeLiteral);
+  webGLOverlayView.onDraw = ({gl, transformer}) => {
+    const matrix = transformer.fromLatLngAltitude(getLatLngAltitudeLiteral());
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
 
     webGLOverlayView.requestRedraw();
@@ -138,7 +148,8 @@ function initWebGLOverlayView (map) {
   webGLOverlayView.setMap(map)
 }
 
+
+
 (async () => {        
-  const map = await initMap();
-  initWebGLOverlayView(map);
+  map = await initMap();
 })();
