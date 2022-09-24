@@ -33,9 +33,8 @@ const apiOptions = {
 const mapOptions = {
   "tilt": 60,
   "heading": 90,
-  "zoom": 17,
+  "zoom": 19,
   "center": { lat: 0, lng: 0 },
-  // "center": { lat: 35.66093428, lng: 139.7290334 },
   "mapId": "4c34c37db05ddaac"
 }
 
@@ -66,9 +65,7 @@ pubnub.subscribe({channels: [pnChannel]});
 pubnub.addListener({
   message: function(receiveMessage) {
     location_data = receiveMessage.message;
-    console.log(location_data);
     if (!webGLOverlayViewInitialized) {
-      console.log("init..");
       webGLOverlayViewInitialized = true;
       initWebGLOverlayView(map);
     }
@@ -90,6 +87,8 @@ function loadPersonalMark(scene) {
       gltf => {
         gltf.scene.rotation.x = 180 * Math.PI/180;
         gltf.scene.rotation.z = 90 * Math.PI/180;
+        // gltf.scene.position.setZ(location_data.verAccuracy * 2);
+        gltf.scene.name = "mark";
         scene.add(gltf.scene);
       }
   );
@@ -105,6 +104,7 @@ function getCylinder(horizontalAccuracy, verticalAccuracy) {
   material.transparent = true;
   const cylinder = new THREE.Mesh( geometry, material );
   cylinder.rotation.x = 90 * Math.PI / 180;
+  cylinder.name = "cylinder";
   return cylinder;
 }
 
@@ -139,6 +139,9 @@ function initWebGLOverlayView (map) {
   webGLOverlayView.onDraw = ({gl, transformer}) => {
     const matrix = transformer.fromLatLngAltitude(getLatLngAltitudeLiteral());
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
+    // console.log(scene.children[2].name);
+
+    scene.children[2] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
 
     webGLOverlayView.requestRedraw();
     renderer.render(scene, camera);
