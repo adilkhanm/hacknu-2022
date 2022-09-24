@@ -38,3 +38,6 @@ input[type=text]:focus {
     box-sizing: border-box;
     border-color: rgb(139 92 246);
   }
+  .hover:hover{
+      cursor: pointer;
+  }

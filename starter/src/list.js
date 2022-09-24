@@ -17,7 +17,7 @@ if (list) {
 }
 
 function openPath(id) {
-    httpGetAsync(`localhost:8082/map/` + id)
+    httpGetAsync(`http://localhost:8082/map/` + id)
 }
 
 function httpGet(theUrl) {
