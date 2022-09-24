@@ -49,7 +49,11 @@
         </h1>
       </a>
     </header>
-    <div style="float: left; width: 300px" class="custom-list">
+    <div
+      style="float: left; width: 300px"
+      class="custom-list"
+      style="overflow-y: scroll"
+    >
       <!-- Tab links -->
       <div class="tab">
         <button class="tablinks" onclick="openCity(event, 'Path')" id="path">
@@ -62,12 +66,59 @@
       </div>
 
       <!-- Tab content -->
-      <div id="Path" class="tabcontent">
-        <h3>London</h3>
-        <p>London is the capital city of England.</p>
+      <div id="Path" class="tabcontent" style="overflow-y: scroll">
+        <div onclick="openPath('1')">
+          <h3>Path 1</h3>
+          <p>Alice/Bob</p>
+        </div>
+        <div onclick="openPath('2')">
+          <hr />
+          <h3>Path 2</h3>
+          <p>Unknown</p>
+        </div>
+        <div onclick="openPath('3')">
+          <hr />
+          <h3>Path 3</h3>
+          <p>Unknown</p>
+        </div>
+        <div onclick="openPath('4')">
+          <hr />
+          <h3>Path 4</h3>
+          <p>Unknown</p>
+        </div>
+        <div>
+          <hr />
+          <h3 onclick="openPath('5')">Path 5</h3>
+          <p>Alice</p>
+        </div>
+        <div onclick="openPath('6')">
+          <hr />
+          <h3>Path 6</h3>
+          <p>Bob</p>
+        </div>
+        <div onclick="openPath('7')">
+          <hr />
+          <h3>Path 7</h3>
+          <p>Jane</p>
+        </div>
+        <div onclick="openPath('8')">
+          <hr />
+          <h3>Path 8</h3>
+          <p>Alice/Bob</p>
+        </div>
+        <div onclick="openPath('9')">
+          <hr />
+          <h3>Path 9</h3>
+          <p>Charlie</p>
+        </div>
+        <div onclick="openPath('10')">
+          <hr />
+          <h3>Path 10</h3>
+          <p>Tenzing</p>
+        </div>
       </div>
 
-      <div id="History" class="tabcontent">
+      <div id="History" class="tabcontent" style="overflow-y: scroll">
         <input type="text" placeholder="From" class="custom-input" />
         <p>-</p>
         <input type="text" placeholder="To" />
