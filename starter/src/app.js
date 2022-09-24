@@ -23,7 +23,7 @@ const apiOptions = {
 };
 
 const mapOptions = {
-  "tilt": 0,
+  "tilt": 60,
   "heading": 90,
   "zoom": 19,
   "center": { lat: 51.53327931, lng: -0.126299062 },
@@ -47,7 +47,7 @@ function initWebGLOverlayView (map) {
     const ambientLight = new THREE.AmbientLight( 0xffffff, 0.75 ); // soft white light
     scene.add( ambientLight );
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.25);
-    directionalLight.position.set(0.5, -1, 0.5);
+    directionalLight.position.set(1, -1, 1);
     scene.add(directionalLight);
 
     loader = new GLTFLoader();
@@ -57,18 +57,42 @@ function initWebGLOverlayView (map) {
         gltf => {
           gltf.scene.scale.set(3,3,3);
           gltf.scene.rotation.x = 180 * Math.PI/180;
+          gltf.scene.rotation.z = 90 * Math.PI/180;
+          // gltf.scene.position.setX(5);
+          // gltf.scene.position.setY(5);
           scene.add(gltf.scene);
         }
     );
-    const source2 = 'pin.gltf';
-    loader.load(
-        source2,
-        gltf => {
-          gltf.scene.scale.set(10,10,10);
-          gltf.scene.rotation.x = 180 * Math.PI/180;
-          scene.add(gltf.scene);
-        }
-    );
+
+    const radiusTop = 20;
+    const radiusBottom = 20;
+    const height = 5;
+    const radialSegments = 20;
+    const geometry = new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height, radialSegments);
+    const material = new THREE.MeshPhongMaterial( {color: 0x0000ff, opacity: 0.5} );
+    material.transparent = true;
+    const cylinder = new THREE.Mesh( geometry, material );
+    cylinder.rotation.x = 90 * Math.PI / 180;
+    scene.add(cylinder);
+
+    // const source2 = 'sphere/scene.gltf';
+    // loader.load(
+    //     source2,
+    //     gltf => {
+    //       gltf.scene.scale.set(10,10,10);
+    //       gltf.scene.rotation.x = 90 * Math.PI/ 180;
+    //       console.log(gltf.scene);
+    //       // let mesh = gltf.scene.children[0];
+    //       // mesh.material.transparent = true;
+    //       // mesh.material.opacity = 0.5;
+    //       // gltf.scene.material.opacity = 0;
+    //       // gltf.scene.material.transparent = true;
+    //       // gltf.scene.color = 0x002200;
+    //       // gltf.scene.rotation.y = 90 * Math.PI / 180;
+    //       // gltf.scene.rotation.z = 180 * Math.PI / 180;
+    //       scene.add(gltf.scene);
+    //     }
+    // );
   };
   webGLOverlayView.onContextRestored = ({gl}) => {
     renderer = new THREE.WebGLRenderer({
@@ -88,7 +112,7 @@ function initWebGLOverlayView (map) {
 
         if (mapOptions.tilt < 67.5) {
           mapOptions.tilt += 0.5
-        } else if (mapOptions.heading <= 360) {
+        } else if (mapOptions.heading <= 150) {
           mapOptions.heading += 0.2;
         } else {
           renderer.setAnimationLoop(null)

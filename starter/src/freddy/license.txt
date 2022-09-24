@@ -1,0 +1,11 @@
+Model Information:
+* title:	(UPGRADE)_Ignited Foxy_TJOC:R - (Rig)-Blender
+* source:	https://sketchfab.com/3d-models/upgrade-ignited-foxy-tjocr-rig-blender-316ad2c364ab43149610724198976387
+* author:	Blancat (https://sketchfab.com/Blancat)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "(UPGRADE)_Ignited Foxy_TJOC:R - (Rig)-Blender" (https://sketchfab.com/3d-models/upgrade-ignited-foxy-tjocr-rig-blender-316ad2c364ab43149610724198976387) by Blancat (https://sketchfab.com/Blancat) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
