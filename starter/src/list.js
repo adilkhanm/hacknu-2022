@@ -17,7 +17,7 @@ if (list) {
 }
 
 function openPath(id) {
-    httpGet(`localhost:8082/map/` + id)
+    httpGetAsync(`localhost:8082/map/` + id)
 }
 
 function httpGet(theUrl) {
@@ -25,4 +25,15 @@ function httpGet(theUrl) {
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
     xmlHttp.send(null);
     return xmlHttp.responseText;
+}
+
+function httpGetAsync(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
 }
