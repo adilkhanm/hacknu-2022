@@ -30,11 +30,13 @@ const apiOptions = {
   "version": "beta"
 };
 
+const idealZoom = 19;
+
 const mapOptions = {
   "tilt": 60,
   "heading": 90,
-  "zoom": 19,
-  "center": { lat: 0, lng: 0 },
+  "zoom": 12,
+  "center": { lat: 51.1605, lng: 71.4704 },
   "mapId": "4c34c37db05ddaac"
 }
 
@@ -78,20 +80,20 @@ async function initMap() {
   return new google.maps.Map(mapDiv, mapOptions);
 }
 
-function loadPersonalMark(scene) {
-  let loader = new GLTFLoader();
-  const source = 'pin.gltf';
-  loader.load(
-      source,
-      gltf => {
-        gltf.scene.rotation.x = 180 * Math.PI/180;
-        gltf.scene.rotation.z = 90 * Math.PI/180;
-        // gltf.scene.position.setZ(location_data.verAccuracy * 2);
-        gltf.scene.name = "mark";
-        scene.add(gltf.scene);
-      }
-  );
-}
+// function loadPersonalMark(scene) {
+//   let loader = new GLTFLoader();
+//   const source = 'pin.gltf';
+//   loader.load(
+//       source,
+//       gltf => {
+//         gltf.scene.rotation.x = 180 * Math.PI/180;
+//         gltf.scene.rotation.z = 90 * Math.PI/180;
+//         // gltf.scene.position.setZ(location_data.verAccuracy * 2);
+//         gltf.scene.name = "mark";
+//         scene.add(gltf.scene);
+//       }
+//   );
+// }
 
 function getSphere(radius) {
   const geometry = new THREE.SphereBufferGeometry(radius, 15, 15);
@@ -119,6 +121,7 @@ function initWebGLOverlayView (map) {
   // setup
   webGLOverlayViewInitialized = true;
   let locationHistory = [];
+  map.setZoom(idealZoom);
 
   let scene, renderer, camera;
   // WebGLOverlayView code goes here
@@ -151,10 +154,11 @@ function initWebGLOverlayView (map) {
 
   webGLOverlayView.onDraw = ({gl, transformer}) => {
     const matrix = transformer.fromLatLngAltitude(getLatLngAltitudeLiteral());
+    console.log(matrix);
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
 
     scene.children[3] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
-    const scaleValue = Math.pow(2, mapOptions.zoom - Math.min(19, map.getZoom()));
+    const scaleValue = Math.pow(2, idealZoom - Math.min(19, map.getZoom()));
     scene.children[2].scale.set(scaleValue, scaleValue, 1);
     scene.children[3].scale.set(scaleValue, 1, scaleValue);
 
@@ -166,10 +170,18 @@ function initWebGLOverlayView (map) {
       locationHistory.push(location_data);
       let lineCoords = [];
       for (const data of locationHistory) {
+        let latRad = data.latitude * (Math.PI / 180);
+        let lngRad = data.longitude * (Math.PI / 180);
+        let radius = 6371;
         lineCoords.push(new THREE.Vector3(
-            (data.longitude - location_data.longitude) * 40075000.0 * Math.cos(data.longitude) / 360.0,
-            (data.latitude - location_data.latitude) * 111320.0,
-            (data.altitude - location_data.altitude)));
+            Math.cos(latRad) * Math.cos(lngRad) * radius,
+            Math.sin(latRad) * radius,
+            Math.cos(latRad) * Math.sin(lngRad) * radius));
+
+        // lineCoords.push(new THREE.Vector3(
+        //     (data.longitude - location_data.longitude) * 40075000.0 * Math.cos(data.longitude) / 360.0,
+        //     (data.latitude - location_data.latitude) * 111320.0,
+        //     (data.altitude - location_data.altitude)));
       }
 
       let tubeGeometry = new THREE.TubeGeometry(
