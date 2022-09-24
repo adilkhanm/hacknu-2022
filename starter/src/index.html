@@ -18,32 +18,36 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>Google Maps Platform WebGL Codelab</title>
+    <title>HackNU</title>
+    <link rel="icon" href="/icons/icons8-code-641.png" />
     <link rel="stylesheet" type="text/css" href="./styles.css" />
     <link rel="stylesheet" type="text/css" href="./tabs.css" />
     <script src="tabs.js"></script>
     <script src="./app.js" defer></script>
-    <script>
-      // Get the element with id="defaultOpen" and click on it
-      document.getElementById("path").click();
-    </script>
   </head>
-  <body style="background-color: rgb(39 39 42); font-family: NeueMachina, sans-serif;">
+  <body
+    style="
+      background-color: rgb(39 39 42);
+      font-family: NeueMachina, sans-serif;
+    "
+  >
     <header style="border-bottom: 5px solid; border-color: rgb(139 92 246)">
-      <h1
-        style="
-          font-family: NeueMachina, sans-serif;
-          margin-top: 0px;
-          padding-top: 20px;
-          font-weight: 800;
-        "
-        class="text-gray"
-      >
-        <span> < </span>
-        <span> HackNU/ </span>
-        <span class="text-violet"> 2022 </span>
+      <a href="https://hacknu.kz" style="text-decoration: none">
+        <h1
+          style="
+            font-family: NeueMachina, sans-serif;
+            margin-top: 0px;
+            padding-top: 20px;
+            font-weight: 800;
+          "
+          class="text-gray"
         >
-      </h1>
+          <span> < </span>
+          <span> HackNU/ </span>
+          <span class="text-violet"> 2022 </span>
+          >
+        </h1>
+      </a>
     </header>
     <div style="float: left; width: 300px" class="custom-list">
       <!-- Tab links -->
@@ -64,20 +68,37 @@
       </div>
 
       <div id="History" class="tabcontent">
-        <input type="text" placeholder="From" class="custom-input">
+        <input type="text" placeholder="From" class="custom-input" />
         <p>-</p>
-        <input type="text" placeholder="To">
-        <hr>
+        <input type="text" placeholder="To" />
+        <hr />
         <h3>Paris</h3>
         <p>Paris is the capital of France.</p>
-        <hr>
+        <hr />
         <h3>London</h3>
         <p>London is the capital city of England.</p>
-        <hr>
+        <hr />
         <h3>Tokyo</h3>
         <p>Tokyo is the capital of Japan.</p>
       </div>
+      <script src="list.js"></script>
     </div>
     <div id="map"></div>
+    <footer
+      class="text-gray"
+      style="
+        padding: 10px;
+        border-top: 5px solid;
+        border-color: rgb(139 92 246);
+      "
+    >
+      <a href="https://github.com/adilkhanm/hacknu-2022" class="text-gray">
+        About us
+      </a>
+    </footer>
   </body>
+  <script>
+    // Get the element with id="defaultOpen" and click on it
+    document.getElementById("path").click();
+  </script>
 </html>
