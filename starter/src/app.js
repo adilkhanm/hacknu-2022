@@ -52,12 +52,30 @@ let location_data = {
   "activity": "unknown"
 }
 
-function getLatLngAltitudeLiteral() {
+function getLatLngAltitudeLiteral(data = location_data) {
   return {
-    lat: location_data.latitude,
-    lng: location_data.longitude,
-    altitude: location_data.altitude
+    lat: data.latitude,
+    lng: data.longitude,
+    altitude: data.altitude
   }
+}
+
+const longitudeConst = 40075000.0;
+const latitudeConst = 111320.0;
+
+// function getVectorFromLiteral(data) {
+//   return new THREE.Vector3(
+//       data.lat / 360.0 * Math.cos(data.lat),
+//       data.lng,
+//       data.altitude);
+// }
+
+function getVectorFromLiteral(data) {
+  let lat = Math.PI / 2.0 - data.lat;
+  return new THREE.Vector3(
+      Math.sin(lat) * Math.sin(data.lng),
+      Math.cos(lat),
+      data.altitude);
 }
 
 let webGLOverlayViewInitialized = false;
@@ -121,6 +139,8 @@ function initWebGLOverlayView (map) {
   // setup
   webGLOverlayViewInitialized = true;
   let locationHistory = [];
+  let lineCoords = [];
+  let polylineCoords = [];
   map.setZoom(idealZoom);
 
   let scene, renderer, camera;
@@ -154,7 +174,6 @@ function initWebGLOverlayView (map) {
 
   webGLOverlayView.onDraw = ({gl, transformer}) => {
     const matrix = transformer.fromLatLngAltitude(getLatLngAltitudeLiteral());
-    console.log(matrix);
     camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
 
     scene.children[3] = getCylinder(location_data.horAccuracy, location_data.verAccuracy);
@@ -162,66 +181,85 @@ function initWebGLOverlayView (map) {
     scene.children[2].scale.set(scaleValue, scaleValue, 1);
     scene.children[3].scale.set(scaleValue, 1, scaleValue);
 
-    let lastLocation = locationHistory[locationHistory.length - 1];
+    let lastLocation = locationHistory.length ? locationHistory[locationHistory.length - 1] : null;
     if (!locationHistory.length || lastLocation.latitude !== location_data.latitude
         || lastLocation.longitude !== location_data.longitude
         || lastLocation.altitude !== location_data.altitude
         || lastLocation.activity !== location_data.activity) {
-      locationHistory.push(location_data);
-      let lineCoords = [];
-      for (const data of locationHistory) {
-        let latRad = data.latitude * (Math.PI / 180);
-        let lngRad = data.longitude * (Math.PI / 180);
-        let radius = 6371;
-        lineCoords.push(new THREE.Vector3(
-            Math.cos(latRad) * Math.cos(lngRad) * radius,
-            Math.sin(latRad) * radius,
-            Math.cos(latRad) * Math.sin(lngRad) * radius));
-
-        // lineCoords.push(new THREE.Vector3(
-        //     (data.longitude - location_data.longitude) * 40075000.0 * Math.cos(data.longitude) / 360.0,
-        //     (data.latitude - location_data.latitude) * 111320.0,
-        //     (data.altitude - location_data.altitude)));
-      }
-
-      let tubeGeometry = new THREE.TubeGeometry(
-          new THREE.CatmullRomCurve3(lineCoords),
-          512,
-          0.5,
-          8,
-          false
-      )
-      let line = new THREE.Line(tubeGeometry, new THREE.LineBasicMaterial({color: 0x0000ff}));
-      line.name = "location_path";
-      if (scene.getObjectByName(line.name)) {
-        scene.children[4] = line;
-      } else {
-        scene.add(line);
-      }
 
       if (lastLocation) {
-        let marker = new google.maps.Marker({
-          position: {
-            lat: lastLocation.latitude,
-            lng: lastLocation.longitude
-          },
-          map,
-          title: "marker" + (locationHistory.length - 2).toString()
-        });
-        const contentString =
-            '<h3>Activity: ' + lastLocation.activity + '</h3>' +
-            '<h3>Floor: ' + lastLocation.floorLabel + ' </h3>';
-        const infoWindow = new google.maps.InfoWindow({
-          content: contentString,
-        });
-        marker.addListener("click", () => {
-          infoWindow.open({
-            anchor: marker,
-            map,
-            shouldFocus: false,
-          });
-        });
+        let latMid = (lastLocation.latitude + location_data.latitude) / 2.0;
+        let m_per_deg_lat = 111132.954 - 559.822 * Math.cos(2.0 * latMid) + 1.175 * Math.cos(4.0 * latMid);
+        let m_per_deg_lon = (Math.PI / 180) * 6367449 * Math.cos(latMid);
+        // console.log(location_data.longitude);
+        // console.log(location_data.latitude);
+        // console.log("\n");
+        let vectorDiff = new THREE.Vector3(
+            (lastLocation.longitude - location_data.longitude) * m_per_deg_lon *
+            ((location_data.longitude > -1 && location_data.longitude <= 0.0) || location_data.longitude < -90 ? 1 : -1),
+            (lastLocation.latitude - location_data.latitude) * m_per_deg_lat,
+            (lastLocation.altitude - location_data.altitude)
+        );
+        for (let i = 0; i < locationHistory.length; i++) {
+          lineCoords[i].addVectors(lineCoords[i], vectorDiff);
+        }
       }
+
+      locationHistory.push(location_data);
+      lineCoords.push(new THREE.Vector3(0, 0, 0));
+      polylineCoords.push({lat: location_data.latitude, lng: location_data.longitude});
+      const path = new google.maps.Polyline({
+        path: polylineCoords,
+        geodesic: true,
+        strokeColor: 0xff0000,
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+      });
+      path.setMap(map);
+
+      if (locationHistory.length >= 2) {
+        let pathMaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
+        let tubeGeometry = new THREE.TubeGeometry(
+            new THREE.CatmullRomCurve3(lineCoords),
+            512,
+            0.5,
+            8,
+            false
+        );
+        let line = new THREE.Line(tubeGeometry, pathMaterial);
+        line.name = "location_path";
+        if (scene.getObjectByName(line.name)) {
+          scene.children[4] = line;
+        } else {
+          scene.add(line);
+        }
+      }
+
+      let marker = new google.maps.Marker({
+        position: {
+          lat: location_data.latitude,
+          lng: location_data.longitude
+        },
+        map,
+        title: "marker" + (location_data.length - 1).toString()
+      });
+      const contentString =
+          '<h2>Identifier: ' + (typeof(location_data.identifier) === 'string' ? location_data.identifier : 'none') + '</h2>' +
+          '<h3>Activity: ' + (typeof(location_data.activity) === 'string' ? location_data.activity : 'none') + '</h3>' +
+          '<h3>Floor: ' + (!isNaN(location_data.floorLabel) ?  location_data.floorLabel : 'none') + ' </h3>' +
+          '<h4>Vertical Accuracy: ' + location_data.verAccuracy + '</h4>' +
+          '<h4>Horizontal Accuracy: ' + location_data.horAccuracy + '</h4>';
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: contentString,
+      });
+      marker.addListener("click", () => {
+        infoWindow.open({
+          anchor: marker,
+          map,
+          shouldFocus: false,
+        });
+      });
     }
 
     webGLOverlayView.requestRedraw();
