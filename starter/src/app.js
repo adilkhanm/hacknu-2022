@@ -21,12 +21,12 @@ let map;
 
 const Pubnub = require('pubnub');
 const pubnub = new Pubnub({
-  subscribeKey: "sub-c-bd5e7bdb-4007-4ebd-b9c8-1f344613d945",
+  subscribeKey: PubnubSubscribeKey,
   userId: "client",
 });
 
 const apiOptions = {
-  "apiKey": "AIzaSyDOgJ-0ARoatmn6vcen5vCuDimcqS114Lk",
+  "apiKey": GoogleMapApiKey,
   "version": "beta"
 };
 
